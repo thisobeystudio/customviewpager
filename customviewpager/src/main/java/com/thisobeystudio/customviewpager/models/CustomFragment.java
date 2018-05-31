@@ -16,7 +16,7 @@ import android.support.v4.app.Fragment;
  */
 public abstract class CustomFragment extends Fragment {
 
-    private static final String ARG_CUSTOM_INDEX_HELPER = "custom_index_helper";
+    public static final String ARG_CUSTOM_INDEX_HELPER = "custom_index_helper";
 
     private CustomIndexHelper customIndexHelper;
 
