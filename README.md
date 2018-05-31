@@ -15,7 +15,7 @@ A Custom `ViewPager` Library for `Android` written in Java. There is also availa
 
 #### Gradle:
 ```groovy
-implementation 'com.thisobeystudio.customviewpager:customviewpager:2.0.0'
+implementation 'com.thisobeystudio.customviewpager:customviewpager:2.0.3'
 ```
 
 ## Implementation into an existing project:
@@ -29,6 +29,9 @@ implementation 'com.thisobeystudio.customviewpager:customviewpager:2.0.0'
 3. See [Customization](#customization) for more options
 4. Optional, init indicators as follows `ViewPager.initIndicators()`
 5. Optional, `Fragment` must extend `CustomFragment` when using complex views to share data between first and last helper pages.
+
+## Demos:
+[Demos][demos]
 
 ## Indicators Features:
 * Notice! Indicators requires a `ConstraintLayout` as `CustomViewPager` parent.
@@ -105,3 +108,4 @@ If you want to add new functionality, please file a new proposal issue first to 
     limitations under the License.
 
  [kv]: https://github.com/thisobeystudio/customviewpagerkotlin
+ [demos]: https://github.com/endikaaguilera/customviewpagerdemos
