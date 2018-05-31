@@ -18,6 +18,9 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.thisobeystudio.customviewpager.models.CustomFragment;
+import com.thisobeystudio.customviewpager.models.CustomIndexHelper;
+
 import java.util.ArrayList;
 
 /**

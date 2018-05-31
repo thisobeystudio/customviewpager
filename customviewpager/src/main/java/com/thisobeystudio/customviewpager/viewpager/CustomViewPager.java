@@ -15,398 +15,333 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.ViewParent;
 
 import com.thisobeystudio.customviewpager.indicator.CustomIndicator;
 import com.thisobeystudio.customviewpager.indicator.IndicatorsRecyclerViewAdapter;
+import com.thisobeystudio.customviewpager.models.CustomFragment;
 
 import java.util.ArrayList;
 
-public class CustomViewPager extends ViewPager
-        implements IndicatorsRecyclerViewAdapter.IndicatorCallbacks {
+public final class CustomViewPager extends ViewPager implements IndicatorsRecyclerViewAdapter.IndicatorCallbacks {
 
+    private Object firstPageData;
+    private Object lastPageData;
+
+    private CustomIndicator mCustomIndicator;
     private static final String TAG = "CustomViewPager";
-
-    // A flag to determine if using {@link CustomViewPagerCallbacks} or not.
-
-    private boolean mUsingCallbacks = false;
-
-    /**
-     * Set using {@link CustomViewPagerCallbacks},
-     * to update the duplicated pages data.
-     * <p>Since we are duplicating real first and last pages,
-     * this option should be enabled {@code true} if pages contains Interactive content such as:
-     * <p>NestedScrollView, CheckBox, Spinner, EditText, etc...
-     *
-     * <p>Notice! That when {@code true} the placeholder Fragment must extend {@link CustomFragment}
-     * , otherwise we will get a {@link ClassCastException}
-     *
-     * @param useCallbacks A flag to determine if using {@link CustomViewPagerCallbacks} or not.
-     *                     <p>{@code default} is {@code true}
-     */
-    public void useHelpersCallbacks(boolean useCallbacks) {
-        mUsingCallbacks = useCallbacks;
-    }
-
-    /**
-     * @return {@code true} if using callbacks, {@code false} otherwise.
-     * <p>{@code default} is {@code true}
-     */
-    @SuppressWarnings({"BooleanMethodIsAlwaysInverted", "WeakerAccess"})
-    public boolean isUsingCallbacks() {
-        return mUsingCallbacks;
-    }
 
     public CustomViewPager(@NonNull Context context) {
         super(context);
-        initCustomViewPagerOnPageChangeListener();
+        this.firstPageData = new Object();      // todo remove this initialization ??
+        this.lastPageData = new Object();       // todo remove this initialization ??
+        this.initCustomViewPagerOnPageChangeListener();
     }
 
     public CustomViewPager(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        initCustomViewPagerOnPageChangeListener();
+        this.firstPageData = new Object();      // todo remove this initialization ??
+        this.lastPageData = new Object();       // todo remove this initialization ??
+        this.initCustomViewPagerOnPageChangeListener();
     }
 
     private void initCustomViewPagerOnPageChangeListener() {
-        addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            @Override
+        this.addOnPageChangeListener(new OnPageChangeListener() {
             public void onPageScrolled(int position, float positionOffset, int posOffsetPixels) {
             }
 
-            @Override
             public void onPageSelected(int position) {
                 updateIndicatorSelection(getRealPosition(position));
             }
 
-            @Override
             public void onPageScrollStateChanged(int state) {
-                CustomViewPager.this.onPageScrollStateChanged(state);
+                if (state == 0 && isFirstHelperPageSelected()) {
+                    setCurrentItem(getRealCount() + -1, false);
+                } else if (state == 0 && isLastHelperPageSelected()) {
+                    setCurrentItem(getRealFirstPageIndex() + -1, false);
+                }
             }
         });
-
     }
 
-    // region OnPageChangeListener
-
-//    private void onPageSelected() {
-//        if (!isUsingCallbacks()) return;
-//        updateHelperFirstPageData();
-//        updateHelperLastPageData();
-//    }
-
-    // set pages
-    private void onPageScrollStateChanged(int state) {
-        if (state == SCROLL_STATE_IDLE && isFirstHelperPageSelected()) {
-            setCurrentItem(getRealCount() - 1, false);
-        } else if (state == SCROLL_STATE_IDLE && isLastHelperPageSelected()) {
-            setCurrentItem(getRealFirstPageIndex() - 1, false);
-        }
-    }
-
-    // endregion OnPageChangeListener
-
-    // region Pager Fragments
-
-    @SuppressWarnings("WeakerAccess")
-    public ArrayList<Fragment> getFragments() {
-        CustomPagerAdapter adapter = getAdapter();
-        if (adapter == null) return null;
-        return adapter.getFragments();
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    public Fragment getFragment(int index) {
-        ArrayList<Fragment> fragments = getFragments();
-        if (fragments == null || index < 0 || index >= fragments.size()) return null;
-        return fragments.get(index);
-    }
-
-    @SuppressWarnings("unused")
-    public Fragment getRealFirstFragment() {
-        return getFragment(getRealFirstPageIndex());
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    public Fragment getHelperFirstFragment() {
-        return getFragment(getHelperFirstPageIndex());
-    }
-
-    @SuppressWarnings("unused")
-    public Fragment getRealLastFragment() {
-        return getFragment(getRealLastPageIndex());
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    public Fragment getHelperLastFragment() {
-        return getFragment(getHelperLastPageIndex());
-    }
-
-    // endregion Pager Fragments
-
-    @SuppressWarnings("WeakerAccess")
-    public int getCount() {
-        if (getRealCount() <= 0) return 0; // just return 0
-        return getRealCount() + 2;
-    }
-
-    public int getRealCount() {
-        CustomPagerAdapter adapter = getAdapter();
-        if (adapter == null || adapter.getRealCount() <= 0) return 0; // just return 0
-        return adapter.getRealCount();
-    }
-
-    @Nullable
-    @Override
-    public CustomPagerAdapter getAdapter() {
-        return (CustomPagerAdapter) super.getAdapter();
-    }
-
-    @Override
-    public void setAdapter(@Nullable PagerAdapter adapter) {
-        if (adapter == null) return;
-        String msg = "PagerAdapter Not Implemented! " +
-                "Please make sure to use " +
-                "(CustomViewPager.java) instead of (ViewPager.java) and " +
-                "(CustomPagerAdapter.java) instead of " +
-                "(FragmentPagerAdapter.java or FragmentStatePagerAdapter.java).";
-        throw new RuntimeException(msg);
-    }
-
-    public void setAdapter(CustomPagerAdapter adapter) {
-        super.setAdapter(adapter);
-    }
-
-    @SuppressWarnings("unused")
-    public final boolean isFirstRealPageSelected() {
-        return super.getCurrentItem() == getRealFirstPageIndex();
-    }
-
-    @SuppressWarnings("unused")
-    public final boolean isLastRealPageSelected() {
-        return super.getCurrentItem() == getRealLastPageIndex();
-    }
-
-    private boolean isFirstHelperPageSelected() {
-        return super.getCurrentItem() == getHelperLastPageIndex();
-    }
-
-    private boolean isLastHelperPageSelected() {
-        return super.getCurrentItem() == getHelperFirstPageIndex();
-    }
-
-    @SuppressWarnings("SameReturnValue")
     private int getRealFirstPageIndex() {
         return 1;
     }
 
     private int getRealLastPageIndex() {
-        return getRealCount();
+        return this.getRealCount();
     }
 
     private int getHelperFirstPageIndex() {
-        return getCount() - 1;
+        return this.getCount() - 1;
     }
 
-    @SuppressWarnings("SameReturnValue")
     private int getHelperLastPageIndex() {
         return 0;
     }
 
-    /* NEW */
-
-    // region First Page Data
-
-    private Object mFirstPageData = null;
-
-    public Object getFirstPageData() {
-        return mFirstPageData;
+    public final int getCount() {
+        return this.getRealCount() <= 0 ? 0 : this.getRealCount() + 2;
     }
 
-    @SuppressWarnings("unused")
-    public void clearPagesData() {
-        clearFirstPageData();
-        clearLastPageData();
+    public final int getRealCount() {
+        CustomPagerAdapter adapter = this.getAdapter();
+        return adapter != null ? adapter.getRealCount() : 0;
     }
 
-    @SuppressWarnings("WeakerAccess")
-    public void clearFirstPageData() {
-        if (!isUsingCallbacks()) return;
-        mFirstPageData = null;
+    public final boolean isFirstRealPageSelected() {
+        return super.getCurrentItem() == this.getRealFirstPageIndex();
     }
 
-    /**
-     * used to share data between first real page and first helper page.
-     * null are not allowed, if you want to set it as null pleas use
-     * {@link #clearFirstPageData()} or {@link #clearPagesData()} instead of passing null.
-     *
-     * @param callbacks source {@link CustomViewPagerCallbacks}
-     */
-    public void setFirstPageDataCallbacks(CustomViewPagerCallbacks callbacks) {
-        if (!isUsingCallbacks() || callbacks == null || callbacks.getPageData() == null) return;
-        mFirstPageData = callbacks.getPageData(); // update data
-        updateHelperFirstPageData();
+    public final boolean isLastRealPageSelected() {
+        return super.getCurrentItem() == this.getRealLastPageIndex();
     }
 
-    @SuppressWarnings("WeakerAccess")
-    public void updateHelperFirstPageData() {
-        if (mFirstPageData == null) return;
-        Fragment firstHelperFragment = getHelperFirstFragment();
-        if (firstHelperFragment != null) {
-            CustomViewPagerCallbacks helperCallbacks = (CustomFragment) firstHelperFragment;
-            helperCallbacks.setHelperPageData(mFirstPageData);
+    private boolean isFirstHelperPageSelected() {
+        return super.getCurrentItem() == this.getHelperLastPageIndex();
+    }
+
+    private boolean isLastHelperPageSelected() {
+        return super.getCurrentItem() == this.getHelperFirstPageIndex();
+    }
+
+    @Nullable
+    public final ArrayList getFragments() {
+        CustomPagerAdapter adapter = this.getAdapter();
+        return adapter != null ? adapter.getFragments() : null;
+    }
+
+    @Nullable
+    public final CustomFragment getRealFirstFragment() {
+        return this.getFragment(this.getRealFirstPageIndex());
+    }
+
+    @Nullable
+    public final CustomFragment getHelperFirstFragment() {
+        return this.getFragment(this.getHelperFirstPageIndex());
+    }
+
+    @Nullable
+    public final CustomFragment getRealLastFragment() {
+        return this.getFragment(this.getRealLastPageIndex());
+    }
+
+    @Nullable
+    public final CustomFragment getHelperLastFragment() {
+        return this.getFragment(this.getHelperLastPageIndex());
+    }
+
+    @Nullable
+    public final CustomFragment getFragment(int index) {
+
+        ArrayList fragments = this.getFragments();
+
+        if (fragments != null && index >= 0 && index < fragments.size()) {
+            return (CustomFragment) fragments.get(index);
+        } else return null;
+    }
+
+    @NonNull
+    public final Object getFirstPageData() {
+        return this.firstPageData;
+    }
+
+    public final void setFirstPageData(@NonNull Object data) {
+        this.firstPageData = data;
+    }
+
+    @NonNull
+    public final Object getLastPageData() {
+        return this.lastPageData;
+    }
+
+    public final void setLastPageData(@NonNull Object data) {
+        this.lastPageData = data;
+    }
+
+    public final void clearPagesData() {
+        this.clearFirstPageData();
+        this.clearLastPageData();
+    }
+
+    public final void clearFirstPageData() {
+        this.firstPageData = new Object();
+    }
+
+    public final void clearLastPageData() {
+        this.lastPageData = new Object();
+    }
+
+    public final void setPageData(boolean first, boolean last, @Nullable Object data) {
+        CustomFragment customFragment;
+        if (first && last) {
+            if (data == null) {
+                return;
+            }
+
+            this.firstPageData = data;
+            this.lastPageData = this.firstPageData;
+            customFragment = this.getHelperFirstFragment();
+            if (customFragment == null) {
+                return;
+            }
+
+            customFragment.setHelperPageData(this.firstPageData);
+            customFragment = this.getHelperLastFragment();
+            if (customFragment == null) {
+                return;
+            }
+
+            customFragment.setHelperPageData(this.firstPageData);
+        } else if (first) {
+            if (data == null) {
+                return;
+            }
+
+            this.firstPageData = data;
+            customFragment = this.getHelperFirstFragment();
+            if (customFragment == null) {
+                return;
+            }
+
+            customFragment.setHelperPageData(this.firstPageData);
+        } else if (last) {
+            if (data == null) {
+                return;
+            }
+
+            this.lastPageData = data;
+            customFragment = this.getHelperLastFragment();
+            if (customFragment == null) {
+                return;
+            }
+
+            customFragment.setHelperPageData(this.lastPageData);
+        }
+
+    }
+
+    @NonNull
+    public final Object getPageData(boolean first, boolean last) {
+        return first && last ? this.firstPageData : (first ? this.firstPageData : (last ? this.lastPageData : new Object()));
+    }
+
+    @Nullable
+    public CustomPagerAdapter getAdapter() {
+        try {
+            return (CustomPagerAdapter) super.getAdapter();
+        } catch (ClassCastException e) {
+            String msg = "Please make sure to use (CustomViewPager.java)\n" +
+                    "instead of (ViewPager.java)\n" +
+                    "and (CustomPagerAdapter.java)\n" +
+                    "instead of (FragmentPagerAdapter.java or FragmentStatePagerAdapter.java).";
+            Log.e("CustomViewPager", msg);
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void setAdapter(@Nullable PagerAdapter adapter) {
+        try {
+            super.setAdapter(adapter);
+        } catch (ClassCastException e) {
+            String msg = "Please make sure to use (CustomViewPager.java)\n" +
+                    "instead of (ViewPager.java)\n" +
+                    "and (CustomPagerAdapter.java)\n" +
+                    "instead of (FragmentPagerAdapter.java or FragmentStatePagerAdapter.java).";
+            Log.e("CustomViewPager", msg);
+            e.printStackTrace();
         }
     }
-    // endregion First Page Data
 
-    // region Last Page Data
-
-    private Object mLastPageData = null;
-
-    public Object getLastPageData() {
-        return mLastPageData;
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    public void clearLastPageData() {
-        if (!isUsingCallbacks()) return;
-        mLastPageData = null;
-    }
-
-    /**
-     * used to share data between last real page and last helper page.
-     * null are not allowed, if you want to set it as null pleas use
-     * {@link #clearFirstPageData()} or {@link #clearPagesData()} instead of passing null.
-     *
-     * @param callbacks source {@link CustomViewPagerCallbacks}
-     */
-    public void setLastPageDataCallbacks(CustomViewPagerCallbacks callbacks) {
-        if (!isUsingCallbacks() || callbacks == null || callbacks.getPageData() == null) return;
-        mLastPageData = callbacks.getPageData(); // update data
-        updateHelperLastPageData();
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    public void updateHelperLastPageData() {
-        if (mLastPageData == null) return;
-        Fragment lastHelperFragment = getHelperLastFragment();
-        if (lastHelperFragment != null) {
-            CustomViewPagerCallbacks helperLastPageCallbacks = (CustomFragment) lastHelperFragment;
-            helperLastPageCallbacks.setHelperPageData(mLastPageData);
-        }
-    }
-
-    // endregion Last Page Data
-
-    private int getRealPosition(int position) {
-        CustomPagerAdapter adapter = getAdapter();
-        if (adapter == null) return 0;
-        return adapter.getRealPosition(position);
-    }
-
-    @Override
     public void setCurrentItem(int item, boolean smoothScroll) {
         super.setCurrentItem(item + 1, smoothScroll);
     }
 
-    @Override
     public void setCurrentItem(int item) {
         super.setCurrentItem(item + 1);
     }
 
-    @Override
     public int getCurrentItem() {
-        String errMsg = "ERROR! getCurrentItem() not implemented!" +
-                " Please use getRealCurrentItem() instead.";
-        throw new RuntimeException(errMsg);
+        return this.getRealPosition(super.getCurrentItem());
     }
 
-    public int getRealCurrentItem() {
-        return getRealPosition(super.getCurrentItem());
+    private int getRealPosition(int position) {
+        CustomPagerAdapter adapter = this.getAdapter();
+        return adapter != null ? adapter.getRealPosition(position) : 0;
     }
 
-    // region Indicators
+    public void onIndicatorClick(int position) {
+        this.setCurrentItem(position, true);
+    }
 
-    private CustomIndicator mCustomIndicator;
+    public final void initIndicators() {
 
-    public void initIndicators(Context context) {
+        ViewParent parent = this.getParent();
 
-        if (context == null) {
-            Log.e(TAG, "Can NOT init CustomViewPager's Indicators. Context is null.");
-            return;
-        }
-
-        ConstraintLayout parent = (ConstraintLayout) getParent();
-
-        if (parent == null) {
-            Log.e(TAG, "Can NOT init CustomViewPager's Indicators. " +
+        if (!(parent instanceof ConstraintLayout)) {
+            Log.e(TAG, "Can NOT init CustomViewPager's Indicators.\n" +
                     "Parent ConstraintLayout is null.");
             return;
         }
 
-        mCustomIndicator = new CustomIndicator(context, parent, this);
+        ConstraintLayout parentCL = (ConstraintLayout) parent;
 
-        // set the indicator callbacks for onIndicatorClick
-        mCustomIndicator.setIndicatorCallbacks(this);
+        this.mCustomIndicator = new CustomIndicator(this.getContext(), parentCL, this);
+        this.mCustomIndicator.setIndicatorCallbacks(this);
     }
 
-    public void initIndicators(Context context, int position, int adjustMode) {
-        initIndicators(context);
-        setIndicatorsMode(position, adjustMode);
+    public final void initIndicators(int position, int adjustMode) {
+        this.initIndicators();
+        this.setIndicatorsMode(position, adjustMode);
     }
 
-    public void initIndicators(Context context, int position, int adjustMode, int maxRows) {
-        initIndicators(context);
-        setIndicatorsMode(position, adjustMode, maxRows);
+    public final void initIndicators(int position, int adjustMode, int maxRows) {
+        this.initIndicators();
+        this.setIndicatorsMode(position, adjustMode, maxRows);
     }
 
-    @SuppressWarnings("WeakerAccess")
-    public void setIndicatorsMode(int position, int adjustMode, int maxRows) {
-        setIndicatorsMode(position, adjustMode);
-        setMaxVisibleIndicatorRows(maxRows);
+    public final void setIndicatorsMode(int position, int adjustMode, int maxRows) {
+        this.setIndicatorsMode(position, adjustMode);
+        this.setMaxVisibleIndicatorRows(maxRows);
     }
 
-    @SuppressWarnings("WeakerAccess")
-    public void setIndicatorsMode(int position, int adjustMode) {
-        if (mCustomIndicator == null) return;
-        mCustomIndicator.setIndicatorsMode(position, adjustMode);
+    public final void setIndicatorsMode(int position, int adjustMode) {
+        CustomIndicator customIndicator = this.mCustomIndicator;
+        if (customIndicator != null) customIndicator.setIndicatorsMode(position, adjustMode);
     }
 
-    @SuppressWarnings("WeakerAccess")
-    public void setMaxVisibleIndicatorRows(int maxRows) {
-        if (mCustomIndicator == null) return;
-        mCustomIndicator.setMaxVisibleIndicatorRows(maxRows);
+    public final void setMaxVisibleIndicatorRows(int maxRows) {
+        CustomIndicator customIndicator = this.mCustomIndicator;
+        if (customIndicator != null) customIndicator.setMaxVisibleIndicatorRows(maxRows);
     }
 
     private void updateIndicatorSelection(int position) {
-        if (mCustomIndicator == null) return;
-        mCustomIndicator.updateSelection(position);
+        CustomIndicator customIndicator = this.mCustomIndicator;
+        if (customIndicator != null) customIndicator.updateSelection(position);
     }
 
-    @Override
-    public void onIndicatorClick(int position) {
-        setCurrentItem(position, true);
+    public final void notifyDataSetChanged() {
+        CustomPagerAdapter adapter = this.getAdapter();
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
+
+        CustomIndicator customIndicator = this.mCustomIndicator;
+        if (customIndicator != null) {
+            Context context = this.getContext();
+            customIndicator.setCount(context, this, this.getRealCount());
+        }
     }
 
-    // endregion Indicators
-
-    @SuppressWarnings("unused")
-    public void notifyDataSetChanged() {
-        CustomPagerAdapter adapter = getAdapter();
-        if (adapter == null) return;
-        adapter.notifyDataSetChanged();
-        if (mCustomIndicator == null) return;
-        mCustomIndicator.setCount(getContext(), this, getRealCount());
-    }
-
-    @SuppressWarnings("unused")
-    public void showThreePages() {
+    public final void showThreePages() {
         int pages = 3;
         int margin = 40;
         int width = getResources().getDisplayMetrics().widthPixels;
-        int padding = width / pages + (margin * 2 / pages);
-        setClipChildren(true);
-        setClipToPadding(false);
-        setPadding(padding, margin, padding, margin);
-        setPageMargin(margin);
+        int padding = width / pages + margin * 2 / pages;
+        this.setClipChildren(true);
+        this.setClipToPadding(false);
+        this.setPadding(padding, margin, padding, margin);
+        this.setPageMargin(margin);
     }
-
 }

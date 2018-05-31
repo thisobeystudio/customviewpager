@@ -105,7 +105,7 @@ public class CustomIndicator {
         mRecyclerView.setNestedScrollingEnabled(false);
 
         final int totalCount = viewPager.getRealCount();
-        int selection = viewPager.getRealCurrentItem();
+        int selection = viewPager.getCurrentItem();
 
         // specify an adapter
         mAdapter = new IndicatorsRecyclerViewAdapter(context, totalCount, selection);

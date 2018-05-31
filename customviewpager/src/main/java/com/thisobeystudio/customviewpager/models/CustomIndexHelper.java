@@ -1,4 +1,4 @@
-package com.thisobeystudio.customviewpager.viewpager;
+package com.thisobeystudio.customviewpager.models;
 
 /*
  * Created by thisobeystudio on 8/5/18.
@@ -28,7 +28,7 @@ public class CustomIndexHelper implements Parcelable {
     private final boolean isHelperFirst;
     private final boolean isHelperLast;
 
-    CustomIndexHelper(int pagerPosition,
+    public CustomIndexHelper(int pagerPosition,
                              int dataPosition,
                              boolean isRealFirst,
                              boolean isRealLast,

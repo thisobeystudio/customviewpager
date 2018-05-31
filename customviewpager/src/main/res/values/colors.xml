@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="indicatorNormal">#808080</color>
-    <color name="indicatorPressed">#002fff</color>
-    <color name="indicatorSelected">#ff4043</color>
+    <color name="indicatorNormal">#ffffff</color>
+    <color name="indicatorPressed">#ffffff</color>
+    <color name="indicatorSelected">#ffffff</color>
 </resources>
