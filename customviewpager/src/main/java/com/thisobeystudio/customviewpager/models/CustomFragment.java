@@ -59,7 +59,7 @@ public abstract class CustomFragment extends Fragment {
         return customIndexHelper != null && customIndexHelper.isRealLast();
     }
 
-    private void setCustomIndexHelper(Bundle args) {
+    protected void setCustomIndexHelper(Bundle args) {
         if (args == null || !args.containsKey(ARG_CUSTOM_INDEX_HELPER)) return;
         this.customIndexHelper = args.getParcelable(ARG_CUSTOM_INDEX_HELPER);
     }

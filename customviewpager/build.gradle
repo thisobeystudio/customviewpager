@@ -44,7 +44,7 @@ dependencies {
 
 
 group = 'com.thisobeystudio.customviewpager'
-version = '2.0.2'
+version = '2.0.3'
 
 task generateSourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
